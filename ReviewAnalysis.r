@@ -1,6 +1,9 @@
 install.packages("syuzhet")
 install.packages("reshape2")
 
+#Language detection
+install.packages("cld2")
+
 library(mongolite)
 library(syuzhet)
 library(lubridate)
@@ -9,7 +12,8 @@ library(scales)
 library(reshape2)
 library(dplyr)
 library(stringi)
-#Setup the URL to be used for connecting to mongo DB
+library(cld2)
+#Setup the URL to be used for connecting to Mongo DB
 #This database is IP address locked and will not work everywhere even with the password
 connection_string = 'mongodb+srv://benjamin:Cn5NOjrAtA5goreY@cluster1.ab84x48.mongodb.net/?retryWrites=true&w=majority'
 
@@ -41,9 +45,27 @@ for(y in 0:10){
   total_rating = entry[["review_scores"]][["review_scores_rating"]]
   #Make a new vector to store the contents of the reviews from this listing
   reviews = vector()
-  #Loop over the entire list of reviews and add them to the vector
+  #Initialize a value to store the current index to insert values at, this is used since we are not including all reviews
+  j = 1
+  #Loop over the entire list of reviews and add them to the vector if they are in English
   for (x in 1:length(review_list)){
-    reviews[x] = review_list[[x]][["comments"]]
+    #Get the contents of the review, this is the written component of the review
+    review = review_list[[x]][["comments"]]
+    #Detect the language of the comment
+    #Our sentiment analysis only works on English so we need to make sure the text is in English
+    language = detect_language(review, plain_text = TRUE, lang_code = TRUE)
+    #If the language is not detected, then we skip this review
+    if(is.na(language)){
+      next
+    }
+    #If the language is not English, then we skip this review
+    if(language != "en"){
+      next
+    }
+    #Add it to the next slot in the reviews vector
+    reviews[j] = review
+    #Increment the j value since we have added a value
+    j = j+1
   }
   
   #Setup sentiment analysis to process the Vector
