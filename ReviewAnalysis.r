@@ -72,14 +72,14 @@ for(y in 0:10){
   s = get_nrc_sentiment(reviews)
   sentiment = vector()
   #Store the sentiment scores in the sentiment vector
-  sentiment = c(sentiment, 0:length(review_list))
+  sentiment = c(sentiment, 0:length(reviews))
   
   #loop over the reviews
-  for (x in 0:length(review_list)){
+  for (x in 0:length(reviews)){
     #For each review we will grab the positive and negative sentiment
     positive = s$positive[x]
     negative = s$negative[x]
-    string = review_list[x]
+    string = reviews[x]
     #Apply a ratio to the sentiment based on the length of the review, essentially calculating the ratio of positive and negative sentiments per word
     positive_ratio = (positive / stri_count_words(string)) * 100
     negative_ratio = (negative / stri_count_words(string)) * 100
@@ -87,7 +87,7 @@ for(y in 0:10){
     sentiment[x] = positive_ratio - negative_ratio
   }
   #Generate an overall score for each listing, again applying a ratio of sentiment per review. Meaning a listing with many reviews doesn't get a higher score than one with few reviews
-  sentiment_total = sum(sentiment) / length(review_list) * 10
+  sentiment_total = sum(sentiment) / length(reviews) * 10
   
   #Print out the results
   print("ListingURL:")
