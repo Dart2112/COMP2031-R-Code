@@ -27,8 +27,11 @@ airbnbcollection = mongo(collection="listingsAndReviews", db="sample_airbnb", ur
 #Get an iterator for the collection of listings
 iterator = airbnbcollection$iterate()
 
+givenScores = vector()
+calculatedScores = vector()
+
 #Run this code ten times meaning we get 10 listings in total from the collection to analyse
-for(y in 0:10){
+for(y in 0:50){
   #Get the next listing from the iterator
   entry = iterator$one();
   #Get the reviews from that listing
@@ -88,13 +91,19 @@ for(y in 0:10){
   }
   #Generate an overall score for each listing, again applying a ratio of sentiment per review. Meaning a listing with many reviews doesn't get a higher score than one with few reviews
   sentiment_total = sum(sentiment) / length(reviews) * 10
+  #Put the given and calculated scores into thier vectors for the data frame later
+  givenScores <- append(givenScores, total_rating)
+  calculatedScores <- append(calculatedScores, sentiment_total)
   
   #Print out the results
-  print("ListingURL:")
-  print(entry[["listing_url"]])
-  print("Dataset Total = ")
-  print(total_rating)
-  print(" Sentiment Total = ")
-  print(sentiment_total)
-  print("==================")
+  #print("ListingURL:")
+  #print(entry[["listing_url"]])
+  #print("Dataset Total = ")
+  #print(total_rating)
+  #print(" Sentiment Total = ")
+  #print(sentiment_total)
+  #print("==================")
 }
+
+df <- data.frame(givenScores, calculatedScores)
+print(df)
