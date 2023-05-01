@@ -30,20 +30,22 @@ iterator = airbnbcollection$iterate()
 givenScores = vector()
 calculatedScores = vector()
 
+enoughReviews = 0
+
 #Run this code ten times meaning we get 10 listings in total from the collection to analyse
-for(y in 0:50){
+for(y in 1:airbnbcollection$count()){
   #Get the next listing from the iterator
   entry = iterator$one();
   #Get the reviews from that listing
   review_list = entry[["reviews"]]
   #Make sure the listing has more than 10 reviews so that we have enough data to analyse
   #This loop will continue to grab the next item from the iterator until we have a list of reviews with greater than 10 entries
-  while(length(review_list) < 10){
+  if(length(review_list) < 10){
     #If it has less then 10 reviews we grab another listing from the collection and try again
-    entry = iterator$one();
-    #Make sure we update the review list value so that the while loop can check it
-    review_list = entry[["reviews"]]
+    print(c(y, " - Not enough reviews"))
+    next
   }
+  enoughReviews = enoughReviews + 1
   #Fetch the total rating from the reviews
   total_rating = entry[["review_scores"]][["review_scores_rating"]]
   #Make a new vector to store the contents of the reviews from this listing
@@ -54,15 +56,22 @@ for(y in 0:50){
   for (x in 1:length(review_list)){
     #Get the contents of the review, this is the written component of the review
     review = review_list[[x]][["comments"]]
+    #Check that the review isn't null before attempting to process it
+    if(is.null(review)){
+      print(c(y, "-", x, " - Review is null"))
+      next
+    }
     #Detect the language of the comment
     #Our sentiment analysis only works on English so we need to make sure the text is in English
     language = detect_language(review, plain_text = TRUE, lang_code = TRUE)
     #If the language is not detected, then we skip this review
     if(is.na(language)){
+      print(c(y, "-", x, " - Cannot detect language"))
       next
     }
     #If the language is not English, then we skip this review
     if(language != "en"){
+      print(c(y, "-", x, " - Not English"))
       next
     }
     #Add it to the next slot in the reviews vector
@@ -94,6 +103,8 @@ for(y in 0:50){
   #Put the given and calculated scores into thier vectors for the data frame later
   givenScores <- append(givenScores, total_rating)
   calculatedScores <- append(calculatedScores, sentiment_total)
+  
+  print(c(y, " Given - " , total_rating, " Calculated -", sentiment_total))
   
   #Print out the results
   #print("ListingURL:")
