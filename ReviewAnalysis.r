@@ -21,7 +21,9 @@ connection_string = 'mongodb+srv://benjamin:Cn5NOjrAtA5goreY@cluster1.ab84x48.mo
 #Cn5NOjrAtA5goreY
 
 #Get the listingsAndReviews data set from Mongo
-airbnbcollection = mongo(collection="listingsAndReviews", db="sample_airbnb", url=connection_string)
+airbnbcollection = mongo(collection = "listingsAndReviews",
+                         db = "sample_airbnb",
+                         url = connection_string)
 #airbnbcollection$count()
 
 #Get an iterator for the collection of listings
@@ -33,18 +35,20 @@ calculatedScores = vector()
 enoughReviews = 0
 
 #Run this code ten times meaning we get 10 listings in total from the collection to analyse
-for(y in 1:airbnbcollection$count()){
+for (y in 1:airbnbcollection$count()) {
   #Get the next listing from the iterator
-  entry = iterator$one();
+  entry = iterator$one()
+  
   #Get the reviews from that listing
   review_list = entry[["reviews"]]
   #Make sure the listing has more than 10 reviews so that we have enough data to analyse
   #This loop will continue to grab the next item from the iterator until we have a list of reviews with greater than 10 entries
-  if(length(review_list) < 10){
+  if (length(review_list) < 25) {
     #If it has less then 10 reviews we grab another listing from the collection and try again
-    print(c(y, " - Not enough reviews"))
+    print(paste(y, " Not enough reviews"))
     next
   }
+  #Logging that we made it to this point in the code so that we can track this
   enoughReviews = enoughReviews + 1
   #Fetch the total rating from the reviews
   total_rating = entry[["review_scores"]][["review_scores_rating"]]
@@ -53,31 +57,36 @@ for(y in 1:airbnbcollection$count()){
   #Initialize a value to store the current index to insert values at, this is used since we are not including all reviews
   j = 1
   #Loop over the entire list of reviews and add them to the vector if they are in English
-  for (x in 1:length(review_list)){
+  for (x in 1:length(review_list)) {
     #Get the contents of the review, this is the written component of the review
     review = review_list[[x]][["comments"]]
     #Check that the review isn't null before attempting to process it
-    if(is.null(review)){
-      print(c(y, "-", x, " - Review is null"))
+    if (is.null(review)) {
+      print(paste(y, x, " Review is null"))
       next
     }
     #Detect the language of the comment
     #Our sentiment analysis only works on English so we need to make sure the text is in English
     language = detect_language(review, plain_text = TRUE, lang_code = TRUE)
     #If the language is not detected, then we skip this review
-    if(is.na(language)){
-      print(c(y, "-", x, " - Cannot detect language"))
+    if (is.na(language)) {
+      print(paste(y, x, " Cannot detect language"))
       next
     }
     #If the language is not English, then we skip this review
-    if(language != "en"){
-      print(c(y, "-", x, " - Not English"))
+    if (language != "en") {
+      print(paste(y, x, " Not English"))
       next
     }
     #Add it to the next slot in the reviews vector
     reviews[j] = review
     #Increment the j value since we have added a value
-    j = j+1
+    j = j + 1
+  }
+  #Check that we are still left with enough reviews to process
+  if (length(reviews) < 10) {
+    print(paste(y, "Not enough reviews after filtering"))
+    next
   }
   
   #Setup sentiment analysis to process the Vector
@@ -87,7 +96,7 @@ for(y in 1:airbnbcollection$count()){
   sentiment = c(sentiment, 0:length(reviews))
   
   #loop over the reviews
-  for (x in 0:length(reviews)){
+  for (x in 0:length(reviews)) {
     #For each review we will grab the positive and negative sentiment
     positive = s$positive[x]
     negative = s$negative[x]
@@ -104,7 +113,7 @@ for(y in 1:airbnbcollection$count()){
   givenScores <- append(givenScores, total_rating)
   calculatedScores <- append(calculatedScores, sentiment_total)
   
-  print(c(y, " Given - " , total_rating, " Calculated -", sentiment_total))
+  print(paste(y, "Given -" , total_rating, "Calculated -", sentiment_total))
   
   #Print out the results
   #print("ListingURL:")
