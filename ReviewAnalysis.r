@@ -32,10 +32,14 @@ iterator = airbnbcollection$iterate()
 givenScores = vector()
 calculatedScores = vector()
 
+retrivedReviews = vector()
+
 enoughReviews = 0
 
-#Run this code ten times meaning we get 10 listings in total from the collection to analyse
+#We get all listings from the collection to analyse
 for (y in 1:airbnbcollection$count()) {
+#Only grab 800 Listings because that's how many we can get before the cursor times out
+#for (y in 1:1000) {
   #Get the next listing from the iterator
   entry = iterator$one()
   
@@ -88,7 +92,13 @@ for (y in 1:airbnbcollection$count()) {
     print(paste(y, "Not enough reviews after filtering"))
     next
   }
-  
+  #Put the given and calculated scores into their vectors for the data frame later
+  givenScores <- append(givenScores, total_rating)
+  retrivedReviews[length(retrivedReviews) + 1] = reviews
+}
+
+for (y in 1:length(retrivedReviews)) {
+  reviews = retrivedReviews[y]
   #Setup sentiment analysis to process the Vector
   s = get_nrc_sentiment(reviews)
   sentiment = vector()
@@ -104,26 +114,27 @@ for (y in 1:airbnbcollection$count()) {
     #Apply a ratio to the sentiment based on the length of the review, essentially calculating the ratio of positive and negative sentiments per word
     positive_ratio = (positive / stri_count_words(string)) * 100
     negative_ratio = (negative / stri_count_words(string)) * 100
+    
     #Store the overall score as positive subtract negative, meaning that a more positive review will create a more positive score and vise versa for negative reviews
-    sentiment[x] = positive_ratio - negative_ratio
+    sentiment[x] = (positive_ratio - negative_ratio) + 50
   }
   #Generate an overall score for each listing, again applying a ratio of sentiment per review. Meaning a listing with many reviews doesn't get a higher score than one with few reviews
-  sentiment_total = sum(sentiment) / length(reviews) * 10
-  #Put the given and calculated scores into thier vectors for the data frame later
-  givenScores <- append(givenScores, total_rating)
+  sentiment_total = sum(sentiment) / length(reviews)
   calculatedScores <- append(calculatedScores, sentiment_total)
   
-  print(paste(y, "Given -" , total_rating, "Calculated -", sentiment_total))
-  
-  #Print out the results
-  #print("ListingURL:")
-  #print(entry[["listing_url"]])
-  #print("Dataset Total = ")
-  #print(total_rating)
-  #print(" Sentiment Total = ")
-  #print(sentiment_total)
-  #print("==================")
+  print(paste(y, "Given -" , givenScores[y], "Calculated -", sentiment_total))
 }
+
 
 df <- data.frame(givenScores, calculatedScores)
 print(df)
+
+plot(
+  df$calculatedScores,
+  df$givenScores,
+  type = "p",
+  col = "black",
+  xlab = "Calculated Scores",
+  ylab = "Gives Scores",
+  main = "Scores Comparison"
+)
