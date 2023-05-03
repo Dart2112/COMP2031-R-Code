@@ -38,8 +38,8 @@ enoughReviews = 0
 
 #We get all listings from the collection to analyse
 for (y in 1:airbnbcollection$count()) {
-#Only grab 800 Listings because that's how many we can get before the cursor times out
-#for (y in 1:1000) {
+  #Only grab 800 Listings because that's how many we can get before the cursor times out
+  #for (y in 1:1000) {
   #Get the next listing from the iterator
   entry = iterator$one()
   
@@ -47,7 +47,7 @@ for (y in 1:airbnbcollection$count()) {
   review_list = entry[["reviews"]]
   #Make sure the listing has more than 10 reviews so that we have enough data to analyse
   #This loop will continue to grab the next item from the iterator until we have a list of reviews with greater than 10 entries
-  if (length(review_list) < 25) {
+  if (length(review_list) < 10) {
     #If it has less then 10 reviews we grab another listing from the collection and try again
     print(paste(y, " Not enough reviews"))
     next
@@ -59,7 +59,6 @@ for (y in 1:airbnbcollection$count()) {
   #Make a new vector to store the contents of the reviews from this listing
   reviews = vector()
   #Initialize a value to store the current index to insert values at, this is used since we are not including all reviews
-  j = 1
   #Loop over the entire list of reviews and add them to the vector if they are in English
   for (x in 1:length(review_list)) {
     #Get the contents of the review, this is the written component of the review
@@ -83,9 +82,7 @@ for (y in 1:airbnbcollection$count()) {
       next
     }
     #Add it to the next slot in the reviews vector
-    reviews[j] = review
-    #Increment the j value since we have added a value
-    j = j + 1
+    reviews[length(reviews) + 1] = review
   }
   #Check that we are still left with enough reviews to process
   if (length(reviews) < 10) {
