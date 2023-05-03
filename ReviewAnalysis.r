@@ -141,6 +141,9 @@ df <- data.frame(givenScores, calculatedScores)
 #Print the data frame
 print(df)
 
+#Write the data to a CSV for safe keeping
+write.csv(df, "/home/benjamin/Documents/Sync/Uni/Data Eng/COMP2031-R-Code/data.csv", row.names=FALSE)
+
 #Make a plot of all items in the data set
 plot(
   df$calculatedScores,
