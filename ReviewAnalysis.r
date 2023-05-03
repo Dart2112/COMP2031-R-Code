@@ -29,26 +29,31 @@ airbnbcollection = mongo(collection = "listingsAndReviews",
 #Get an iterator for the collection of listings
 iterator = airbnbcollection$iterate()
 
+#Vectors to store the results after they are calculated
 givenScores = vector()
 calculatedScores = vector()
 
+#This vector will store the vectors of reviews for each property
+#So each entry in this vector is an individual listing and contains all filtered reviews
 retrivedReviews = vector()
 
+#This is used to track how many listings pass initial filtering
 enoughReviews = 0
+
+#
+#Data Collection, Wrangling and Tidying Loop
+#
 
 #We get all listings from the collection to analyse
 for (y in 1:airbnbcollection$count()) {
-  #Only grab 800 Listings because that's how many we can get before the cursor times out
-  #for (y in 1:1000) {
   #Get the next listing from the iterator
   entry = iterator$one()
   
   #Get the reviews from that listing
   review_list = entry[["reviews"]]
   #Make sure the listing has more than 10 reviews so that we have enough data to analyse
-  #This loop will continue to grab the next item from the iterator until we have a list of reviews with greater than 10 entries
   if (length(review_list) < 10) {
-    #If it has less then 10 reviews we grab another listing from the collection and try again
+    #If it has less then 10 reviews we grab skip this listing
     print(paste(y, " Not enough reviews"))
     next
   }
@@ -58,8 +63,7 @@ for (y in 1:airbnbcollection$count()) {
   total_rating = entry[["review_scores"]][["review_scores_rating"]]
   #Make a new vector to store the contents of the reviews from this listing
   reviews = vector()
-  #Initialize a value to store the current index to insert values at, this is used since we are not including all reviews
-  #Loop over the entire list of reviews and add them to the vector if they are in English
+  #Loop over the entire list of reviews and add them to the vector if they are English and not null
   for (x in 1:length(review_list)) {
     #Get the contents of the review, this is the written component of the review
     review = review_list[[x]][["comments"]]
@@ -89,18 +93,25 @@ for (y in 1:airbnbcollection$count()) {
     print(paste(y, "Not enough reviews after filtering"))
     next
   }
-  #Put the given and calculated scores into their vectors for the data frame later
+  #Put the given scores into the for the data frame later
   givenScores <- append(givenScores, total_rating)
+  #Store the reviews into the vector for the sentiment analysis for later
   retrivedReviews[length(retrivedReviews) + 1] = reviews
 }
 
+#
+#Data Analysis Loop
+#
+
+#Loop over each listing that we stored in the first loop
 for (y in 1:length(retrivedReviews)) {
+  #Load the reviews for this listing into a variable
   reviews = retrivedReviews[y]
   #Setup sentiment analysis to process the Vector
   s = get_nrc_sentiment(reviews)
   sentiment = vector()
   #Store the sentiment scores in the sentiment vector
-  sentiment = c(sentiment, 0:length(reviews))
+  sentiment = c(sentiment, 1:length(reviews))
   
   #loop over the reviews
   for (x in 0:length(reviews)) {
@@ -113,19 +124,24 @@ for (y in 1:length(retrivedReviews)) {
     negative_ratio = (negative / stri_count_words(string)) * 100
     
     #Store the overall score as positive subtract negative, meaning that a more positive review will create a more positive score and vise versa for negative reviews
+    #The adding of 50 is to normalize it compared to the given scores. e.g. 0-100
     sentiment[x] = (positive_ratio - negative_ratio) + 50
   }
   #Generate an overall score for each listing, again applying a ratio of sentiment per review. Meaning a listing with many reviews doesn't get a higher score than one with few reviews
   sentiment_total = sum(sentiment) / length(reviews)
+  #Store the calculated score into the vector for visualizations
   calculatedScores <- append(calculatedScores, sentiment_total)
   
+  #Print the two scores for debugging
   print(paste(y, "Given -" , givenScores[y], "Calculated -", sentiment_total))
 }
 
-
+#Insert data into a data frame
 df <- data.frame(givenScores, calculatedScores)
+#Print the data frame
 print(df)
 
+#Make a plot of all items in the dataset
 plot(
   df$calculatedScores,
   df$givenScores,
