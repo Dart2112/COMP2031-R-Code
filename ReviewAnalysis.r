@@ -141,7 +141,7 @@ df <- data.frame(givenScores, calculatedScores)
 #Print the data frame
 print(df)
 
-#Make a plot of all items in the dataset
+#Make a plot of all items in the data set
 plot(
   df$calculatedScores,
   df$givenScores,
@@ -151,3 +151,7 @@ plot(
   ylab = "Gives Scores",
   main = "Scores Comparison"
 )
+
+#Split into two plots, One above the mean of calculated scores, one below
+
+#Bar graph of the error between calculated and provided
