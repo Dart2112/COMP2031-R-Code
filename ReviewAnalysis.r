@@ -137,12 +137,12 @@ for (y in 1:length(retrivedReviews)) {
 }
 
 #Insert data into a data frame
-df <- data.frame(givenScores, calculatedScores)
+scoresFrame <- data.frame(givenScores, calculatedScores)
 #Print the data frame
-print(df)
+print(scoresFrame)
 
 #Write the data to a CSV for safe keeping
-write.csv(df, "./data.csv", row.names = FALSE)
+write.csv(scoresFrame, "./data.csv", row.names = FALSE)
 
 #
 # Data Visualization
@@ -150,12 +150,12 @@ write.csv(df, "./data.csv", row.names = FALSE)
 
 #Make a plot of all items in the data set
 plot(
-  df$calculatedScores,
-  df$givenScores,
+  scoresFrame$calculatedScores,
+  scoresFrame$givenScores,
   type = "p",
   col = "black",
   xlab = "Calculated Scores",
-  ylab = "Gives Scores",
+  ylab = "Given Scores",
   main = "Scores Comparison"
 )
 
