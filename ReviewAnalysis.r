@@ -12,6 +12,7 @@ library(scales)
 library(reshape2)
 library(dplyr)
 library(stringi)
+library(rstudioapi)
 library(cld2)
 #Setup the URL to be used for connecting to Mongo DB
 #This database is IP address locked and will not work everywhere even with the password
@@ -140,6 +141,10 @@ for (y in 1:length(retrivedReviews)) {
 scoresFrame <- data.frame(givenScores, calculatedScores)
 #Print the data frame
 print(scoresFrame)
+
+# Getting the path of your current open file
+current_path = rstudioapi::getActiveDocumentContext()$path 
+setwd(dirname(current_path ))
 
 #Write the data to a CSV for safe keeping
 write.csv(scoresFrame, "./data.csv", row.names = FALSE)
